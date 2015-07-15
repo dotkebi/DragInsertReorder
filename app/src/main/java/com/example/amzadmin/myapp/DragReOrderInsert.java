@@ -21,21 +21,19 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
     private enum ViewType {
         AREA_TOP
         , AREA_BOTTOM
-        , ANCHOR
-        , STICKY
-
     }
 
     private static final int NUM_OF_ROWS = 5;
 
     private WindowManager windowManager;
-    private WindowManager.LayoutParams mParams;
+    private WindowManager.LayoutParams stickyParams;
+    private WindowManager.LayoutParams anchorParams;
     private ImageView sticky;
+    private ImageView anchor;
 
     private int selX;
     private int selY;
     private View selectView = null;
-    private View viewToChangePlace;
     private int oldPosition = -1;
     private int positionToChange = -1;
 
@@ -46,7 +44,6 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
     private Adapter topAdapter;
     private Adapter bottomAdapter;
 
-    private ViewProperty value;
     private Context context;
     private View convertView;
 
@@ -179,28 +176,40 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
                 idx++;
             }
 
-            ViewProperty viewProperty = new ViewProperty();
-            viewToChangePlace = View.inflate(context, R.layout.position, null);
-            viewProperty.viewType = ViewType.ANCHOR;
-            viewProperty.sortOrder = -1;
-            viewToChangePlace.setTag(viewProperty);
-            viewToChangePlace.setVisibility(GONE);
-            addView(viewToChangePlace, param);
-
             windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 
-            mParams = new WindowManager.LayoutParams(
+            stickyParams = new WindowManager.LayoutParams(
                     WindowManager.LayoutParams.MATCH_PARENT,
                     WindowManager.LayoutParams.WRAP_CONTENT,
                     WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                     PixelFormat.TRANSLUCENT);
-            mParams.gravity = Gravity.LEFT | Gravity.TOP;
+            stickyParams.gravity = Gravity.LEFT | Gravity.TOP;
 
             sticky = new ImageView(context);
             sticky.setVisibility(GONE);
 
-            windowManager.addView(sticky, mParams);
+            anchorParams = new WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                    PixelFormat.TRANSLUCENT);
+            anchorParams.gravity = Gravity.LEFT | Gravity.TOP;
+
+            View roundBox = View.inflate(context, R.layout.position, null);
+            addView(roundBox, param);
+            setChildLayout(roundBox, 0);
+            roundBox.setDrawingCacheEnabled(true);
+            Bitmap bitmap = Bitmap.createBitmap(roundBox.getDrawingCache());
+            removeView(roundBox);
+
+            anchor = new ImageView(context);
+            anchor.setImageBitmap(bitmap);
+            anchor.setVisibility(GONE);
+
+            windowManager.addView(sticky, stickyParams);
+            windowManager.addView(anchor, anchorParams);
 
         }
 
@@ -248,10 +257,8 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
             viewProperty = (ViewProperty) child.getTag();
 
             if (child.getVisibility() == GONE
-                    || viewProperty.viewType == ViewType.ANCHOR
-                    || viewProperty.viewType == ViewType.STICKY
                     || viewProperty.sortOrder == -1
-                ) {
+                    ) {
                 continue;
             }
 
@@ -334,156 +341,152 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
     }
 
     //private OnTouchListener onTouch = new OnTouchListener() {
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
 
-            int x = (int) event.getX();
-            int y = (int) event.getY();
+        int x = (int) event.getX();
+        int y = (int) event.getY();
+
+        ViewProperty viewProperty;
 
 
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    selX = x;
-                    selY = y;
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                selX = x;
+                selY = y;
 
-                    int cnt = getChildCount();
-                    for (int i = 0; i < cnt; i++) {
-                        View child = getChildAt(i);
-                        if (selectView == child) {
+                int cnt = getChildCount();
+                for (int i = 0; i < cnt; i++) {
+                    View child = getChildAt(i);
+                        /*if (selectView == child) {
                             break;
-                        }
+                        }*/
 
-                        if (isPointInsideView(x, y, child)) {
-                            child.setDrawingCacheEnabled(true);
-                            Bitmap bitmap = Bitmap.createBitmap(child.getDrawingCache());
-                            sticky.setImageBitmap(bitmap);
+                    if (isPointInsideView(x, y, child)) {
+                        child.setDrawingCacheEnabled(true);
+                        Bitmap bitmap = Bitmap.createBitmap(child.getDrawingCache());
+                        sticky.setImageBitmap(bitmap);
 
-                            ViewProperty viewProperty = (ViewProperty) child.getTag();
-                            viewProperty.viewType = ViewType.STICKY;
-                            child.setTag(viewProperty);
-                            selectView = child;
-                            oldPosition = getPositionOfChild(x, y);
-
-                            break;
-                        }
+                        viewProperty = (ViewProperty) child.getTag();
+                        child.setTag(viewProperty);
+                        selectView = child;
+                        oldPosition = getPositionOfChild(x, y);
+                        break;
                     }
+                }
+                break;
+            case MotionEvent.ACTION_MOVE:
+                //if (selectView != null) {
+
+                int tx = x - selX;
+                int ty = y - selY;
+
+                if (tx == 0 || ty == 0) {
                     break;
-                case MotionEvent.ACTION_MOVE:
-                    if (selectView != null) {
+                }
 
-                        int tx = x - selX;
-                        int ty = y - selY;
-
-                        if (tx == 0 || ty == 0) {
-                            break;
-                        }
+                selX = x;
+                selY = y;
 
 
-                        int l = x + tx;
-                        int t = x + ty;
+
+                int l = selectView.getLeft() + tx;
+                int t = selectView.getTop() + ty;
 
                         /*int l = selectView.getLeft() + tx;
                         int t = selectView.getTop() + ty;
                         int r = selectView.getRight() + tx;
                         int b = selectView.getBottom() + ty;*/
 
-                        selX = x;
-                        selY = y;
+                stickyParams.x = l;
+                stickyParams.y = t;
+                sticky.setVisibility(VISIBLE);
+                windowManager.updateViewLayout(sticky, stickyParams);
 
-                        mParams.x = l;
-                        mParams.y = t;
-                        sticky.setVisibility(VISIBLE);
-                        windowManager.updateViewLayout(sticky, mParams);
+                //selectView.layout(l, t, r, b);
+                positionToChange = getPositionOfChild(sticky.getLeft() + sticky.getWidth() / 2, sticky.getTop() + sticky.getHeight() / 2);
 
-                        //selectView.layout(l, t, r, b);
-                        positionToChange = getPositionOfChild(sticky.getLeft() + tx / 2, sticky.getTop() + ty / 2);
-                        //positionToChange = getPositionOfChild(selectView.getLeft() + tx / 2, selectView.getTop() + ty / 2);
-                        setChildLayout(viewToChangePlace, positionToChange);
-                        if (positionToChange < 0) {
-                            positionToChange = 0;
+
+                //setChildLayout(viewToChangePlace, positionToChange);
+                if (positionToChange < 0) {
+                    positionToChange = 0;
+                }
+                if (positionToChange > 14) {
+                    positionToChange = 14;
+                }
+
+                setAnchor(positionToChange);
+
+                viewProperty = (ViewProperty) selectView.getTag();
+                viewProperty.sortOrder = positionToChange;
+                selectView.setTag(viewProperty);
+                selectView.setVisibility(INVISIBLE);
+
+                if (oldPosition == positionToChange) {
+                    break;
+                }
+                Log.w("start", String.format("from %02d to %02d", oldPosition, positionToChange));
+
+
+                View child;
+                if (oldPosition > positionToChange) {
+                    String msg = "";
+                    for (int i = 0; i < getChildCount(); i++) {
+                        child = getChildAt(i);
+                        viewProperty = (ViewProperty) child.getTag();
+                        if (child.getVisibility() == GONE) {
+                            continue;
                         }
-                        if (positionToChange > 14) {
-                            positionToChange = 14;
+                        int position = getPositionOfChild(child);
+                        if (positionToChange <= position && position < oldPosition) {
+                            viewProperty.sortOrder = position + 1;
+                            child.setTag(viewProperty);
+                            setChildLayout(child, position + 1);
+                            msg += "(" + position + "->" + (position + 1) + ") ";
                         }
-                        ViewProperty viewProperty = new ViewProperty();
-                        viewProperty = (ViewProperty) selectView.getTag();
-                        viewProperty.viewType = ViewType.ANCHOR;
-                        viewProperty.sortOrder = positionToChange;
-                        selectView.setTag(viewProperty);
-                        selectView.setVisibility(GONE);
-
-                        viewToChangePlace.setVisibility(VISIBLE);
-                        if (oldPosition == positionToChange) {
-                            break;
-                        }
-                        Log.w("start", String.format("from %02d to %02d", oldPosition, positionToChange));
-
-
-                        View child;
-                        if (oldPosition > positionToChange) {
-                            String msg = "";
-                            for (int i = 0; i < getChildCount(); i++) {
-                                child = getChildAt(i);
-                                viewProperty = (ViewProperty) child.getTag();
-                                if (viewProperty.viewType == ViewType.ANCHOR
-                                    || viewProperty.viewType == ViewType.STICKY) {
-                                    continue;
-                                }
-                                int position = getPositionOfChild(child);
-                                if (positionToChange <= position && position < oldPosition) {
-                                    viewProperty.sortOrder = position + 1;
-                                    child.setTag(viewProperty);
-                                    setChildLayout(child, position + 1);
-                                    msg += "(" + position + "->" + (position + 1) + ") ";
-                                }
-                            }
-                            Log.w("up", String.format("%s", msg));
-
-                        }
-                        if (oldPosition < positionToChange) {
-                            String msg = "";
-                            for (int i = 0; i < getChildCount(); i++) {
-                                child = getChildAt(i);
-                                viewProperty = (ViewProperty) child.getTag();
-                                if (viewProperty.viewType == ViewType.ANCHOR
-                                        || viewProperty.viewType == ViewType.STICKY) {
-                                    continue;
-                                }
-                                int position = getPositionOfChild(child);
-                                if (position == 0) {
-                                    continue;
-                                }
-                                if (oldPosition <= position && position <= positionToChange) {
-                                    viewProperty.sortOrder = position + 1;
-                                    child.setTag(viewProperty);
-                                    setChildLayout(child, position - 1);
-                                    msg += "(" + position + "->" + (position - 1) + ") ";
-                                }
-                            }
-                            Log.w("down", String.format("%s", msg));
-
-                        }
-                        oldPosition = positionToChange;
-
                     }
+                    Log.w("up", String.format("%s", msg));
 
-                    break;
+                }
+                if (oldPosition < positionToChange) {
+                    String msg = "";
+                    for (int i = 0; i < getChildCount(); i++) {
+                        child = getChildAt(i);
+                        viewProperty = (ViewProperty) child.getTag();
+                        if (child.getVisibility() == GONE) {
+                            continue;
+                        }
+                        int position = getPositionOfChild(child);
+                        if (position == 0) {
+                            continue;
+                        }
+                        if (oldPosition <= position && position <= positionToChange) {
+                            viewProperty.sortOrder = position + 1;
+                            child.setTag(viewProperty);
+                            setChildLayout(child, position - 1);
+                            msg += "(" + position + "->" + (position - 1) + ") ";
+                        }
+                    }
+                    Log.w("down", String.format("%s", msg));
 
-                case MotionEvent.ACTION_UP:
-                    ViewProperty viewProperty = (ViewProperty) selectView.getTag();
-                    viewProperty.viewType = ViewType.AREA_TOP;
-                    selectView.setTag(viewProperty);
-                    selectView.setVisibility(VISIBLE);
-                    //setChildLayout(selectView, positionToChange);
-                    //selectView = null;
-                    viewToChangePlace.setVisibility(GONE);
-                    /*View child = getChildAt(14);
-                    setChildLayout(child, positionToChange);
-                    child.setVisibility(VISIBLE);*/
-                    break;
-            }
-            return true;
+                }
+                oldPosition = positionToChange;
+
+                //}
+
+                break;
+
+            case MotionEvent.ACTION_UP:
+                selectView.setVisibility(VISIBLE);
+                sticky.setVisibility(GONE);
+                windowManager.updateViewLayout(sticky, stickyParams);
+
+                anchor.setVisibility(GONE);
+                windowManager.updateViewLayout(anchor, anchorParams);
+                break;
         }
+        return true;
+    }
     //};
 
     private boolean isPointInsideView(float x, float y, View view){
@@ -513,6 +516,24 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
         int row = child.getTop() / height;
 
         return ((row * numOfColumn) + column);
+    }
+
+    private void setAnchor(int idx) {
+        int paddingLeft = getPaddingLeft();
+        int paddingTop = getPaddingTop();
+
+        int childWidth = anchor.getWidth();
+        int childHeight = anchor.getHeight();
+
+        int row = idx / numOfColumn;
+        int column = idx % numOfColumn;
+
+        int childTop = paddingTop + (childHeight + horizontalSpace) * row;
+        int childLeft = paddingLeft + (childWidth + verticalSpace) * column;
+
+        anchorParams.x = childLeft;
+        anchorParams.y = childTop;
+        windowManager.updateViewLayout(anchor, anchorParams);
     }
 
 
