@@ -30,8 +30,6 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
     private ImageView sticky;
     private ImageView anchor;
 
-    private int selX;
-    private int selY;
     private View selectView = null;
     private int oldPosition = -1;
     private int positionToChange = -1;
