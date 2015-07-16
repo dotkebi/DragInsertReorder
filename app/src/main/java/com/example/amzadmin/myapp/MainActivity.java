@@ -7,15 +7,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends Activity {
+    private DragReOrderInsert dragReOrderInsert;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        DragReOrderInsert dragReOrderInsert = (DragReOrderInsert) findViewById(R.id.drag);
-
-        //View sub = View.inflate(this, R.layout.list_item_delivery_list, null);
+        dragReOrderInsert = (DragReOrderInsert) findViewById(R.id.drag);
 
         List<String> arrayList = new ArrayList<>();
         for (int i = 0; i < 15; i++) {
@@ -33,6 +32,12 @@ public class MainActivity extends Activity {
         dragReOrderInsert.setBottomAdapter(bAdapter);
 
 
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        dragReOrderInsert.finish();
     }
 
 }
