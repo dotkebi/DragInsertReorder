@@ -293,6 +293,8 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
                 break;
             case MotionEvent.ACTION_MOVE:
 
+                if (oldPosition > -1) {
+
 
                     stickyParams.x = x - sticky.getWidth() / 2;
                     stickyParams.y = y - sticky.getHeight() / 2;
@@ -313,7 +315,7 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
                     viewProperty = (ViewProperty) selectView.getTag();
                     viewProperty.sortOrder = positionToChange;
                     selectView.setTag(viewProperty);
-                    selectView.setVisibility(INVISIBLE);
+                    selectView.setVisibility(GONE);
 
                     if (oldPosition == positionToChange) {
                         break;
@@ -349,7 +351,7 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
                                 continue;
                             }
                             if (oldPosition <= position && position <= positionToChange) {
-                                viewProperty.sortOrder = position + 1;
+                                viewProperty.sortOrder = position - 1;
                                 child.setTag(viewProperty);
                                 setChildLayout(child, position - 1);
                             }
@@ -358,13 +360,13 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
                     }
                     oldPosition = positionToChange;
 
-                //}
+                }
 
                 break;
 
             case MotionEvent.ACTION_UP:
-                setChildLayout(selectView, positionToChange);
                 selectView.setVisibility(VISIBLE);
+
                 sticky.setVisibility(GONE);
                 windowManager.updateViewLayout(sticky, stickyParams);
 
