@@ -4,7 +4,9 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
+import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -12,6 +14,12 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Adapter;
 import android.widget.ImageView;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author dotkebi on 2015. 7. 9..
@@ -58,8 +66,8 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.DragReOrderInsert);
         if (a != null) {
             numOfColumn = a.getInt(R.styleable.DragReOrderInsert_numOfColumn, numOfColumn);
-            verticalSpace = a.getInt(R.styleable.DragReOrderInsert_verticalSpace, verticalSpace);
-            horizontalSpace = a.getInt(R.styleable.DragReOrderInsert_horizontalSpace, horizontalSpace);
+            verticalSpace = a.getDimensionPixelOffset(R.styleable.DragReOrderInsert_verticalSpace, verticalSpace);
+            horizontalSpace = a.getDimensionPixelOffset(R.styleable.DragReOrderInsert_horizontalSpace, horizontalSpace);
         }
 
         if (numOfColumn <= 0) {
@@ -219,18 +227,36 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
     }
 
     void layoutVertical(int left, int top, int right, int bottom) {
+        List<ViewProperty> list = new ArrayList<>();
         ViewProperty viewProperty;
         for (int i = 0; i < getChildCount(); i++) {
             View child = getChildAt(i);
             viewProperty = (ViewProperty) child.getTag();
 
-            if (child.getVisibility() == GONE
-                    || viewProperty.sortOrder == -1
-                    ) {
+            if (child.getVisibility() == GONE) {
                 continue;
             }
-
+            list.add(viewProperty);
             setChildLayout(child, viewProperty.sortOrder);
+        }
+
+        // Collections.sort(list, new SalesOrderListComparator());
+
+        String msg = "";
+        for (ViewProperty item : list) {
+            msg += item.sortOrder + " ";
+        }
+        Log.w("layout", msg);
+
+    }
+
+    private class SalesOrderListComparator implements Comparator<ViewProperty> {
+        @Override
+        public int compare(ViewProperty lhs, ViewProperty rhs) {
+            int sales1 = lhs.sortOrder;
+            int sales2 = rhs.sortOrder;
+
+            return sales1 > sales2 ? -1 : (sales1 == sales2 ? 0 : 1);
         }
     }
 
@@ -290,74 +316,56 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
-
                 if (oldPosition > -1) {
-
-
                     stickyParams.x = x - sticky.getWidth() / 2;
                     stickyParams.y = y - sticky.getHeight() / 2;
                     sticky.setVisibility(VISIBLE);
                     windowManager.updateViewLayout(sticky, stickyParams);
 
                     positionToChange = getPositionOfChild(stickyParams.x, stickyParams.y);
-
-                    if (positionToChange < 0) {
-                        positionToChange = 0;
-                    }
-                    if (positionToChange > 14) {
-                        positionToChange = 14;
-                    }
-
-                    setAnchor(positionToChange);
-
-                    viewProperty = (ViewProperty) selectView.getTag();
-                    viewProperty.sortOrder = positionToChange;
-                    selectView.setTag(viewProperty);
-                    selectView.setVisibility(GONE);
-
-                    if (oldPosition == positionToChange) {
-                        break;
-                    }
-
+                    positionToChange = (positionToChange > NUM_OF_ROWS * numOfColumn) ? NUM_OF_ROWS * numOfColumn : positionToChange;
 
                     View child;
-                    if (oldPosition > positionToChange) {
+                    Map<Integer, Integer> result = new HashMap<>();
+
+                    if (oldPosition !=  positionToChange) {
                         for (int i = 0; i < getChildCount(); i++) {
                             child = getChildAt(i);
                             viewProperty = (ViewProperty) child.getTag();
-                            if (child.getVisibility() == GONE) {
-                                continue;
-                            }
-                            int position = getPositionOfChild(child);
+                            int position = getPositionOfChild(child.getX(), child.getY());
                             if (positionToChange <= position && position < oldPosition) {
                                 viewProperty.sortOrder = position + 1;
-                                child.setTag(viewProperty);
-                                setChildLayout(child, position + 1);
-                            }
-                        }
-
-                    }
-                    if (oldPosition < positionToChange) {
-                        for (int i = 0; i < getChildCount(); i++) {
-                            child = getChildAt(i);
-                            viewProperty = (ViewProperty) child.getTag();
-                            if (child.getVisibility() == GONE) {
-                                continue;
-                            }
-                            int position = getPositionOfChild(child);
-                            if (position == 0) {
-                                continue;
-                            }
-                            if (oldPosition <= position && position <= positionToChange) {
+                            } else if (oldPosition < position && position <= positionToChange) {
                                 viewProperty.sortOrder = position - 1;
-                                child.setTag(viewProperty);
-                                setChildLayout(child, position - 1);
-                            }
+                            } /*else {
+                                continue;
+                            }*/
+                            result.put(viewProperty.sortOrder, viewProperty.sortOrder);
+
+                            viewProperty.sortOrder = (viewProperty.sortOrder > NUM_OF_ROWS * numOfColumn) ? NUM_OF_ROWS * numOfColumn : (viewProperty.sortOrder < 0) ? 0 : viewProperty.sortOrder;
+
+                            child.setTag(viewProperty);
+                            setChildLayout(child, viewProperty.sortOrder);
                         }
 
-                    }
-                    oldPosition = positionToChange;
+                        viewProperty = (ViewProperty) selectView.getTag();
+                        viewProperty.sortOrder = positionToChange;
+                        selectView.setTag(viewProperty);
+                        selectView.setVisibility(GONE);
 
+                        if (result.containsKey(viewProperty.sortOrder)) {
+                            try {
+                                throw new MyException(viewProperty.sortOrder);
+                            } catch (MyException e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+                            result.put(positionToChange, positionToChange);
+                        }
+
+                        setAnchor(positionToChange);
+                        oldPosition = positionToChange;
+                    }
                 }
 
                 break;
@@ -376,15 +384,12 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
         }
         return true;
     }
-    //};
 
-    private boolean isPointInsideView(float x, float y, View view){
-        int viewX = view.getLeft();
-        int viewY = view.getTop();
+    private boolean isPointInsideView(int x, int y, View view){
+        Rect rect = new Rect();
+        view.getGlobalVisibleRect(rect);
 
-        //point is inside view bounds
-        return (x > viewX && x < (viewX + view.getWidth())) &&
-                (y > viewY && y < (viewY + view.getHeight()));
+        return rect.contains(x, y);
     }
 
     private int getPositionOfChild(float x, float y) {
@@ -397,17 +402,8 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
         return ((row * numOfColumn) + column);
     }
 
-    private int getPositionOfChild(View child) {
-        int width = getChildWidth();
-        int height = getChildHeight();
-
-        int column = child.getLeft() / width;
-        int row = child.getTop() / height;
-
-        return ((row * numOfColumn) + column);
-    }
-
     private void setAnchor(int idx) {
+
         int paddingLeft = getPaddingLeft();
         int paddingTop = getPaddingTop();
 
@@ -420,10 +416,10 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
         int childTop = paddingTop + (childHeight + horizontalSpace) * row;
         int childLeft = paddingLeft + (childWidth + verticalSpace) * column;
 
-
-        anchorParams.x = childLeft + 64;
-        anchorParams.y = childTop + 64;
+        anchorParams.x = childLeft + paddingLeft + 64;
+        anchorParams.y = childTop + paddingTop + 64 ;
         anchor.setVisibility(VISIBLE);
+
         windowManager.updateViewLayout(anchor, anchorParams);
     }
 
@@ -439,6 +435,8 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
 
         int childTop = paddingTop + (childHeight + horizontalSpace) * row;
         int childLeft = paddingLeft + (childWidth + verticalSpace) * column;
+
+
 
         child.layout(childLeft, childTop, childLeft + childWidth, childTop + childHeight);
     }
@@ -468,6 +466,19 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
         if (windowManager != null) {
             windowManager.removeView(anchor);
             windowManager.removeView(sticky);
+        }
+    }
+
+    public class MyException extends Exception {
+        int num;
+
+        public MyException(int num) {
+            this.num = num;
+        }
+        @Override
+        public String getMessage() {
+            return String.valueOf(num) +
+                    "중복";
         }
     }
 

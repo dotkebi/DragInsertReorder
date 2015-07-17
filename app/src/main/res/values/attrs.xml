@@ -2,8 +2,8 @@
 
     <declare-styleable name="DragReOrderInsert">
         <attr name="numOfColumn" format="integer"/>
-        <attr name="verticalSpace" format="integer"/>
-        <attr name="horizontalSpace" format="integer"/>
+        <attr name="verticalSpace" format="dimension"/>
+        <attr name="horizontalSpace" format="dimension"/>
     </declare-styleable>
     
 </resources>

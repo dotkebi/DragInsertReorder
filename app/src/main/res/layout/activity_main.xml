@@ -10,14 +10,13 @@
     android:focusable="false"
     android:focusableInTouchMode="false"
     android:descendantFocusability="blocksDescendants"
-
     tools:context=".MainActivity">
 
     <com.example.amzadmin.myapp.DragReOrderInsert
         android:clickable="true"
         app:numOfColumn="3"
-        app:horizontalSpace="5"
-        app:verticalSpace="5"
+        app:horizontalSpace="5dp"
+        app:verticalSpace="5dp"
         android:id="@+id/drag"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
