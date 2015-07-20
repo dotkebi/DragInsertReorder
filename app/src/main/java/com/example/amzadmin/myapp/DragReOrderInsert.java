@@ -21,12 +21,14 @@ import java.util.Map;
  * @author dotkebi on 2015. 7. 9..
  */
 public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener {
+    private static final int NUM_OF_ROWS = 5;
+    private static final int NUM_OF_TOP = 9;
+    private static final int NUM_OF_BOTTOM = 6;
+
     private enum ViewType {
         AREA_TOP
         , AREA_BOTTOM
     }
-
-    private static final int NUM_OF_ROWS = 5;
 
     private WindowManager windowManager;
     private WindowManager.LayoutParams stickyParams;
@@ -159,46 +161,53 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
             int height = getChildHeight();
 
             DragReOrderInsert.LayoutParams param = new DragReOrderInsert.LayoutParams(width, height);
-            int idx = 0;
-            int size = (topAdapter.getCount() > 9) ? 9 : topAdapter.getCount();
-            View child;
-            for (int i = 0; i < size; i++) {
-                child = topAdapter.getView(i, convertView, this);
-                child.setTag(ViewType.AREA_TOP);
-                childView.put(idx, child);
-                idx++;
+
+            if (topAdapter != null) {
+                int idx = 0;
+                int size = (topAdapter.getCount() > NUM_OF_TOP) ? NUM_OF_TOP : topAdapter.getCount();
+                View child;
+                for (int i = 0; i < size; i++) {
+                    child = topAdapter.getView(i, convertView, this);
+                    child.setTag(ViewType.AREA_TOP);
+                    childView.put(idx, child);
+                    addView(childView.get(idx), param);
+                    idx++;
+                }
             }
-            size = (bottomAdapter.getCount() > 6) ? 6 : bottomAdapter.getCount();
-            for (int i = 0; i < size; i++) {
-                child = bottomAdapter.getView(i, convertView, this);
-                child.setTag(ViewType.AREA_BOTTOM);
-                childView.put(idx, child);
-                idx++;
+            if (bottomAdapter != null) {
+                int size = (bottomAdapter.getCount() > NUM_OF_BOTTOM) ? NUM_OF_BOTTOM : bottomAdapter.getCount();
+                int idx = NUM_OF_TOP;
+                View child;
+                for (int i = 0; i < size; i++) {
+                    child = bottomAdapter.getView(i, convertView, this);
+                    child.setTag(ViewType.AREA_BOTTOM);
+                    childView.put(idx, child);
+                    addView(childView.get(idx), param);
+                    idx++;
+                }
             }
 
-            for (int key : childView.keySet()) {
-                addView(childView.get(key), param);
+            if (windowManager == null) {
 
+                windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+
+                stickyParams = new WindowManager.LayoutParams(
+                        WindowManager.LayoutParams.WRAP_CONTENT,
+                        WindowManager.LayoutParams.WRAP_CONTENT,
+                        WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                        PixelFormat.TRANSLUCENT);
+                stickyParams.gravity = Gravity.LEFT | Gravity.TOP;
+
+                sticky = new ImageView(context);
+                sticky.setVisibility(GONE);
+                windowManager.addView(sticky, stickyParams);
+
+
+                anchor = View.inflate(context, R.layout.position, null);
+                anchor.setVisibility(GONE);
+                addView(anchor, param);
             }
-
-            windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-
-            stickyParams = new WindowManager.LayoutParams(
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
-                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                    PixelFormat.TRANSLUCENT);
-            stickyParams.gravity = Gravity.LEFT | Gravity.TOP;
-
-            sticky = new ImageView(context);
-            sticky.setVisibility(GONE);
-
-            anchor = View.inflate(context, R.layout.position, null);
-            anchor.setVisibility(GONE);
-            addView(anchor, param);
-
-            windowManager.addView(sticky, stickyParams);
 
         }
 
@@ -389,6 +398,16 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
         }
     }
 
+    public void toggleBottom(boolean flag) {
+        for (int i = 0; i < getChildCount(); i++) {
+            View child = getChildAt(i);
+
+            if (child.getTag() == ViewType.AREA_BOTTOM) {
+                child.setVisibility((flag) ? GONE : VISIBLE);
+            }
+        }
+
+    }
 
 
 }

@@ -17,13 +17,13 @@ public class MainActivity extends Activity {
         dragReOrderInsert = (DragReOrderInsert) findViewById(R.id.drag);
 
         List<String> arrayList = new ArrayList<>();
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < 5; i++) {
             arrayList.add("top " + i);
         }
         BAdapter tAdapter = new BAdapter(this, arrayList);
 
         List<String> arrayList2 = new ArrayList<>();
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < 3; i++) {
             arrayList2.add("bottom " + i);
         }
         BAdapter bAdapter = new BAdapter(this, arrayList2);
