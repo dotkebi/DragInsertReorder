@@ -13,7 +13,7 @@
     tools:context=".MainActivity">
 
     <com.example.amzadmin.myapp.DragReOrderInsert
-        android:clickable="true"
+        android:layout_marginTop="300dp"
         app:numOfColumn="3"
         app:horizontalSpace="5dp"
         app:verticalSpace="5dp"

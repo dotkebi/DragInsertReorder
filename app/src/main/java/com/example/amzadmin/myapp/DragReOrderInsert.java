@@ -262,7 +262,7 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
                         sticky.setImageBitmap(bitmap);
 
                         selectView = child;
-                        oldPosition = getPositionOfChild(x, y);
+                        oldPosition = getPositionOfChild(x, y, -1);
                         oldPosition = (oldPosition > (NUM_OF_ROWS * numOfColumn - 1)) ? ((NUM_OF_ROWS * numOfColumn) - 1): oldPosition;
                         break;
                     }
@@ -276,7 +276,7 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
                     sticky.setVisibility(VISIBLE);
                     windowManager.updateViewLayout(sticky, stickyParams);
 
-                    int positionToChange = getPositionOfChild(stickyParams.x, stickyParams.y);
+                    int positionToChange = getPositionOfChild(stickyParams.x, stickyParams.y, oldPosition);
                     positionToChange = (positionToChange > (NUM_OF_ROWS * numOfColumn) - 1) ? (NUM_OF_ROWS * numOfColumn) - 1: positionToChange;
 
                     View viewToChange;
@@ -335,15 +335,15 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
         return rect.contains(x, y);
     }
 
-    private int getPositionOfChild(float x, float y) {
-        int width = getChildWidth();
-        int height = getChildHeight();
-
-        int column = (int) x / width;
-        int row = (int) y / height;
-
-        return ((row * numOfColumn) + column);
+    private int getPositionOfChild(int x, int y, int previous) {
+        for (int key : childView.keySet()) {
+            if (isPointInsideView(x, y, childView.get(key))) {
+                return key;
+            }
+        }
+        return previous;
     }
+
 
     private void setAnchor(int idx) {
         anchor.setVisibility(VISIBLE);
@@ -388,5 +388,7 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
             windowManager.removeView(sticky);
         }
     }
+
+
 
 }
