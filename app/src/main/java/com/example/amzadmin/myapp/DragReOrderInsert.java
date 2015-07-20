@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -15,10 +14,7 @@ import android.view.WindowManager;
 import android.widget.Adapter;
 import android.widget.ImageView;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,13 +30,13 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
 
     private WindowManager windowManager;
     private WindowManager.LayoutParams stickyParams;
-    private WindowManager.LayoutParams anchorParams;
     private ImageView sticky;
-    private ImageView anchor;
+    private View anchor;
+
+    private Map<Integer, View> childView;
 
     private View selectView = null;
     private int oldPosition = -1;
-    private int positionToChange = -1;
 
     private int numOfColumn;
     private int verticalSpace;
@@ -73,6 +69,7 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
         if (numOfColumn <= 0) {
             numOfColumn = 1;
         }
+        childView = new HashMap<>();
         setOnTouchListener(this);
         a.recycle();
 
@@ -88,7 +85,7 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
         if (getChildCount() > 0) {
             for (int i = 0; i < getChildCount(); i++) {
                 View child = getChildAt(i);
-                if (((ViewProperty) child.getTag()).viewType == ViewType.AREA_TOP) {
+                if (child.getTag() == ViewType.AREA_TOP) {
                     removeViewAt(i);
                 }
             }
@@ -99,7 +96,7 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
         if (getChildCount() > 0) {
             for (int i = 0; i < getChildCount(); i++) {
                 View child = getChildAt(i);
-                if (((ViewProperty) child.getTag()).viewType == ViewType.AREA_BOTTOM) {
+                if (child.getTag() == ViewType.AREA_BOTTOM) {
                     removeViewAt(i);
                 }
             }
@@ -157,32 +154,31 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
             return;
         }
 
-        if (getChildCount() == 0) {
+        if (getChildCount() == 0 && childView.size() == 0) {
             int width = getChildWidth();
             int height = getChildHeight();
 
             DragReOrderInsert.LayoutParams param = new DragReOrderInsert.LayoutParams(width, height);
-
             int idx = 0;
             int size = (topAdapter.getCount() > 9) ? 9 : topAdapter.getCount();
+            View child;
             for (int i = 0; i < size; i++) {
-                ViewProperty viewProperty = new ViewProperty();
-                View child  = topAdapter.getView(i, convertView, this);
-                viewProperty.viewType = ViewType.AREA_TOP;
-                viewProperty.sortOrder = idx;
-                child.setTag(viewProperty);
-                addView(child, param);
+                child = topAdapter.getView(i, convertView, this);
+                child.setTag(ViewType.AREA_TOP);
+                childView.put(idx, child);
                 idx++;
             }
             size = (bottomAdapter.getCount() > 6) ? 6 : bottomAdapter.getCount();
             for (int i = 0; i < size; i++) {
-                ViewProperty viewProperty = new ViewProperty();
-                View child  = bottomAdapter.getView(i, convertView, this);
-                viewProperty.viewType = ViewType.AREA_BOTTOM;
-                viewProperty.sortOrder = idx;
-                child.setTag(viewProperty);
-                addView(child, param);
+                child = bottomAdapter.getView(i, convertView, this);
+                child.setTag(ViewType.AREA_BOTTOM);
+                childView.put(idx, child);
                 idx++;
+            }
+
+            for (int key : childView.keySet()) {
+                addView(childView.get(key), param);
+
             }
 
             windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
@@ -198,27 +194,11 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
             sticky = new ImageView(context);
             sticky.setVisibility(GONE);
 
-            anchorParams = new WindowManager.LayoutParams(
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
-                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                    PixelFormat.TRANSLUCENT);
-            anchorParams.gravity = Gravity.LEFT | Gravity.TOP;
-
-            View roundBox = View.inflate(context, R.layout.position, null);
-            addView(roundBox, param);
-            setChildLayout(roundBox, 0);
-            roundBox.setDrawingCacheEnabled(true);
-            Bitmap bitmap = Bitmap.createBitmap(roundBox.getDrawingCache());
-            removeView(roundBox);
-
-            anchor = new ImageView(context);
-            anchor.setImageBitmap(bitmap);
+            anchor = View.inflate(context, R.layout.position, null);
             anchor.setVisibility(GONE);
+            addView(anchor, param);
 
             windowManager.addView(sticky, stickyParams);
-            windowManager.addView(anchor, anchorParams);
 
         }
 
@@ -227,36 +207,12 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
     }
 
     void layoutVertical(int left, int top, int right, int bottom) {
-        List<ViewProperty> list = new ArrayList<>();
-        ViewProperty viewProperty;
-        for (int i = 0; i < getChildCount(); i++) {
-            View child = getChildAt(i);
-            viewProperty = (ViewProperty) child.getTag();
-
-            if (child.getVisibility() == GONE) {
+        for (int key : childView.keySet()) {
+            View view = childView.get(key);
+            if (view.getVisibility() == GONE) {
                 continue;
             }
-            list.add(viewProperty);
-            setChildLayout(child, viewProperty.sortOrder);
-        }
-
-        // Collections.sort(list, new SalesOrderListComparator());
-
-        String msg = "";
-        for (ViewProperty item : list) {
-            msg += item.sortOrder + " ";
-        }
-        Log.w("layout", msg);
-
-    }
-
-    private class SalesOrderListComparator implements Comparator<ViewProperty> {
-        @Override
-        public int compare(ViewProperty lhs, ViewProperty rhs) {
-            int sales1 = lhs.sortOrder;
-            int sales2 = rhs.sortOrder;
-
-            return sales1 > sales2 ? -1 : (sales1 == sales2 ? 0 : 1);
+            setChildLayout(view, key);
         }
     }
 
@@ -293,8 +249,6 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
         int x = (int) event.getRawX();
         int y = (int) event.getRawY();
 
-        ViewProperty viewProperty;
-
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
 
@@ -307,14 +261,14 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
                         Bitmap bitmap = Bitmap.createBitmap(child.getDrawingCache());
                         sticky.setImageBitmap(bitmap);
 
-                        viewProperty = (ViewProperty) child.getTag();
-                        child.setTag(viewProperty);
                         selectView = child;
                         oldPosition = getPositionOfChild(x, y);
+                        oldPosition = (oldPosition > (NUM_OF_ROWS * numOfColumn - 1)) ? ((NUM_OF_ROWS * numOfColumn) - 1): oldPosition;
                         break;
                     }
                 }
                 break;
+
             case MotionEvent.ACTION_MOVE:
                 if (oldPosition > -1) {
                     stickyParams.x = x - sticky.getWidth() / 2;
@@ -322,50 +276,47 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
                     sticky.setVisibility(VISIBLE);
                     windowManager.updateViewLayout(sticky, stickyParams);
 
-                    positionToChange = getPositionOfChild(stickyParams.x, stickyParams.y);
-                    positionToChange = (positionToChange > NUM_OF_ROWS * numOfColumn) ? NUM_OF_ROWS * numOfColumn : positionToChange;
+                    int positionToChange = getPositionOfChild(stickyParams.x, stickyParams.y);
+                    positionToChange = (positionToChange > (NUM_OF_ROWS * numOfColumn) - 1) ? (NUM_OF_ROWS * numOfColumn) - 1: positionToChange;
 
+                    View viewToChange;
                     View child;
-                    Map<Integer, Integer> result = new HashMap<>();
+                    if (oldPosition != positionToChange) {
+                        viewToChange = childView.get(oldPosition);
+                        if (positionToChange < oldPosition) {
+                            for (int i = oldPosition; i > positionToChange; i--) {
+                                int previousKey = i - 1;
+                                if (childView.containsKey(i) && childView.containsKey(previousKey)) {
+                                    child = childView.get(previousKey);
+                                    childView.put(i, child);
+                                    setChildLayout(childView.get(i), i);
 
-                    if (oldPosition !=  positionToChange) {
-                        for (int i = 0; i < getChildCount(); i++) {
-                            child = getChildAt(i);
-                            viewProperty = (ViewProperty) child.getTag();
-                            int position = getPositionOfChild(child.getX(), child.getY());
-                            if (positionToChange <= position && position < oldPosition) {
-                                viewProperty.sortOrder = position + 1;
-                            } else if (oldPosition < position && position <= positionToChange) {
-                                viewProperty.sortOrder = position - 1;
-                            } /*else {
-                                continue;
-                            }*/
-                            result.put(viewProperty.sortOrder, viewProperty.sortOrder);
-
-                            viewProperty.sortOrder = (viewProperty.sortOrder > NUM_OF_ROWS * numOfColumn) ? NUM_OF_ROWS * numOfColumn : (viewProperty.sortOrder < 0) ? 0 : viewProperty.sortOrder;
-
-                            child.setTag(viewProperty);
-                            setChildLayout(child, viewProperty.sortOrder);
-                        }
-
-                        viewProperty = (ViewProperty) selectView.getTag();
-                        viewProperty.sortOrder = positionToChange;
-                        selectView.setTag(viewProperty);
-                        selectView.setVisibility(GONE);
-
-                        if (result.containsKey(viewProperty.sortOrder)) {
-                            try {
-                                throw new MyException(viewProperty.sortOrder);
-                            } catch (MyException e) {
-                                e.printStackTrace();
+                                    setAnchor(positionToChange);
+                                }
                             }
-                        } else {
-                            result.put(positionToChange, positionToChange);
+                            childView.put(positionToChange, viewToChange);
+                            setChildLayout(viewToChange, positionToChange);
+
+                        } else if (oldPosition < positionToChange) {
+                            for (int i = oldPosition; i < positionToChange; i++) {
+                                int nextKey = i + 1;
+                                if (childView.containsKey(i) && childView.containsKey(nextKey)) {
+                                    child = childView.get(nextKey);
+                                    childView.put(i, child);
+                                    setChildLayout(childView.get(i), i);
+
+                                    setAnchor(positionToChange);
+                                }
+                            }
+
+                            viewToChange.setVisibility(GONE);
+                            childView.put(positionToChange, viewToChange);
+
                         }
 
-                        setAnchor(positionToChange);
                         oldPosition = positionToChange;
                     }
+
                 }
 
                 break;
@@ -373,11 +324,10 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
             case MotionEvent.ACTION_UP:
                 selectView.setVisibility(VISIBLE);
 
+                anchor.setVisibility(GONE);
+
                 sticky.setVisibility(GONE);
                 windowManager.updateViewLayout(sticky, stickyParams);
-
-                anchor.setVisibility(GONE);
-                windowManager.updateViewLayout(anchor, anchorParams);
 
                 oldPosition = -1;
                 break;
@@ -416,11 +366,8 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
         int childTop = paddingTop + (childHeight + horizontalSpace) * row;
         int childLeft = paddingLeft + (childWidth + verticalSpace) * column;
 
-        anchorParams.x = childLeft + paddingLeft + 64;
-        anchorParams.y = childTop + paddingTop + 64 ;
         anchor.setVisibility(VISIBLE);
-
-        windowManager.updateViewLayout(anchor, anchorParams);
+        anchor.layout(childLeft, childTop, childLeft + childWidth, childTop + childHeight);
     }
 
     private void setChildLayout(View child, int idx) {
@@ -435,8 +382,6 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
 
         int childTop = paddingTop + (childHeight + horizontalSpace) * row;
         int childLeft = paddingLeft + (childWidth + verticalSpace) * column;
-
-
 
         child.layout(childLeft, childTop, childLeft + childWidth, childTop + childHeight);
     }
@@ -457,28 +402,10 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
         }
     }
 
-    public class ViewProperty {
-        ViewType viewType;
-        int sortOrder;
-    }
 
     public void finish() {
         if (windowManager != null) {
-            windowManager.removeView(anchor);
             windowManager.removeView(sticky);
-        }
-    }
-
-    public class MyException extends Exception {
-        int num;
-
-        public MyException(int num) {
-            this.num = num;
-        }
-        @Override
-        public String getMessage() {
-            return String.valueOf(num) +
-                    "중복";
         }
     }
 
