@@ -353,21 +353,8 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
     }
 
     private void setAnchor(int idx) {
-
-        int paddingLeft = getPaddingLeft();
-        int paddingTop = getPaddingTop();
-
-        int childWidth = getChildWidth();
-        int childHeight = getChildHeight();
-
-        int row = idx / numOfColumn;
-        int column = idx % numOfColumn;
-
-        int childTop = paddingTop + (childHeight + horizontalSpace) * row;
-        int childLeft = paddingLeft + (childWidth + verticalSpace) * column;
-
         anchor.setVisibility(VISIBLE);
-        anchor.layout(childLeft, childTop, childLeft + childWidth, childTop + childHeight);
+        setChildLayout(anchor, idx);
     }
 
     private void setChildLayout(View child, int idx) {
