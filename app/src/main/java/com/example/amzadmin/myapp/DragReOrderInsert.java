@@ -280,50 +280,33 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
                     positionToChange = (positionToChange > (NUM_OF_ROWS * numOfColumn) - 1) ? (NUM_OF_ROWS * numOfColumn) - 1: positionToChange;
 
                     View viewToChange;
-                    View child;
                     if (oldPosition != positionToChange) {
                         viewToChange = childView.get(oldPosition);
+                        viewToChange.setVisibility(GONE);
+
                         if (positionToChange < oldPosition) {
                             for (int i = oldPosition; i > positionToChange; i--) {
                                 int previousKey = i - 1;
-                                if (childView.containsKey(i) && childView.containsKey(previousKey)) {
-                                    child = childView.get(previousKey);
-                                    childView.put(i, child);
-                                    setChildLayout(childView.get(i), i);
-
-                                    setAnchor(positionToChange);
-                                }
+                                swapChild(i, previousKey, positionToChange);
                             }
-                            childView.put(positionToChange, viewToChange);
-                            setChildLayout(viewToChange, positionToChange);
 
                         } else if (oldPosition < positionToChange) {
                             for (int i = oldPosition; i < positionToChange; i++) {
                                 int nextKey = i + 1;
-                                if (childView.containsKey(i) && childView.containsKey(nextKey)) {
-                                    child = childView.get(nextKey);
-                                    childView.put(i, child);
-                                    setChildLayout(childView.get(i), i);
-
-                                    setAnchor(positionToChange);
-                                }
+                                swapChild(i, nextKey, positionToChange);
                             }
-
-                            viewToChange.setVisibility(GONE);
-                            childView.put(positionToChange, viewToChange);
-
                         }
+                        childView.put(positionToChange, viewToChange);
+                        setChildLayout(viewToChange, positionToChange);
 
                         oldPosition = positionToChange;
                     }
 
                 }
-
                 break;
 
             case MotionEvent.ACTION_UP:
                 selectView.setVisibility(VISIBLE);
-
                 anchor.setVisibility(GONE);
 
                 sticky.setVisibility(GONE);
@@ -333,6 +316,16 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
                 break;
         }
         return true;
+    }
+
+    private void swapChild(int key, int nKey, int newPosition) {
+        if (childView.containsKey(key) && childView.containsKey(nKey)) {
+            View child = childView.get(nKey);
+            childView.put(key, child);
+            setChildLayout(childView.get(key), key);
+
+            setAnchor(newPosition);
+        }
     }
 
     private boolean isPointInsideView(int x, int y, View view){
