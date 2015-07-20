@@ -209,8 +209,8 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
     void layoutVertical(int left, int top, int right, int bottom) {
         for (int key : childView.keySet()) {
             View view = childView.get(key);
-            if (view.getVisibility() == GONE) {
-                continue;
+            if (oldPosition == -1) {
+                view.setVisibility(VISIBLE);
             }
             setChildLayout(view, key);
         }
