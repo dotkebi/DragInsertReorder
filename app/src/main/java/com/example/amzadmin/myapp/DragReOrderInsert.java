@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -272,7 +271,7 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
                         oldPosition = getPositionOfChild(x, y, -1);
                         oldPosition = (oldPosition > (NUM_OF_ROWS * numOfColumn - 1)) ? ((NUM_OF_ROWS * numOfColumn) - 1): oldPosition;
                         fromBottom = (oldPosition >= NUM_OF_TOP);
-                        bottomPosition = (fromBottom) ? oldPosition - NUM_OF_TOP: -1;
+                        bottomPosition = (fromBottom) ? oldPosition - NUM_OF_TOP : -1;
                         setAnchor(oldPosition);
                         break;
                     }
@@ -301,26 +300,26 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
                         viewToChange.setVisibility(GONE);
                     }
 
-                    Log.w("position", String.format("old %d      ptc %d", oldPosition, positionToChange));
 
-                    if (fromBottom) { // from bottom
-
+                    if (fromBottom && positionToChange < NUM_OF_TOP) { // from bottom
+                        if (topViewMap.size() > NUM_OF_TOP) {
+                            topViewMap.remove(NUM_OF_TOP - 1);
+                        }
                         bottomViewMap.remove(bottomPosition);
-                        bottomViewMap = reOrdering(bottomViewMap);
-                        childMovesRight(positionToChange, topViewMap.size() - 1, topViewMap);
-                        //childMoveLeft(bottomPosition, bottomViewMap.size(), bottomViewMap);
+                        bottomViewMap = reordering(bottomViewMap);
+
+                        childMovesToRight(topViewMap.size(), positionToChange, topViewMap);
                         fromBottom = false;
 
                     } else if (oldPosition != positionToChange) {
 
                         if (positionToChange < oldPosition) {
-                            childMovesRight(oldPosition, positionToChange, topViewMap);
+                            childMovesToRight(oldPosition, positionToChange, topViewMap);
                         } else if (oldPosition < positionToChange) {
-                            childMoveLeft(oldPosition, positionToChange, topViewMap);
+                            childMoveToLeft(oldPosition, positionToChange, topViewMap);
                         }
 
                     }
-
 
                     if (viewToChange != null) {
                         topViewMap.put(positionToChange, viewToChange);
@@ -344,32 +343,21 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
                 windowManager.updateViewLayout(sticky, stickyParams);
 
                 oldPosition = -1;
-                topViewMap = reOrdering(topViewMap);
+                topViewMap = reordering(topViewMap);
 
                 break;
         }
         return true;
     }
 
-    private Map<Integer, View> reOrdering(Map<Integer, View> sourceMap) {
-        int previousKey = 0;
-        Map<Integer, View> reorderedMap = new HashMap<>();
-
-        for (int key : sourceMap.keySet()) {
-            reorderedMap.put(previousKey, sourceMap.get(key));
-            previousKey++;
-        }
-        return reorderedMap;
-    }
-
-    private void childMoveLeft(int oldPosition, int positionToChange, Map<Integer, View> viewMap) {
+    private void childMoveToLeft(int oldPosition, int positionToChange, Map<Integer, View> viewMap) {
         for (int i = oldPosition; i < positionToChange; i++) {
             int nextKey = i + 1;
             swapChild(i, nextKey, viewMap);
         }
     }
 
-    private void childMovesRight(int oldPosition, int positionToChange, Map<Integer, View> viewMap) {
+    private void childMovesToRight(int oldPosition, int positionToChange, Map<Integer, View> viewMap) {
         for (int i = oldPosition; i > positionToChange; i--) {
             int previousKey = i - 1;
             swapChild(i, previousKey, viewMap);
@@ -387,7 +375,26 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
         viewMap.put(right, rightView);
 
         setChildLayout(viewMap.get(left), left);
+        setChildLayout(viewMap.get(right), right);
     }
+
+    private Map<Integer, View> reordering(Map<Integer, View> sourceMap) {
+        return reordering(sourceMap, 0, sourceMap.size());
+    }
+
+    private Map<Integer, View> reordering(Map<Integer, View> sourceMap, int start, int end) {
+        int previousKey = start;
+        Map<Integer, View> reorderedMap = new HashMap<>();
+
+        for (int key : sourceMap.keySet()) {
+            if (start <= previousKey && previousKey <= end) {
+                reorderedMap.put(previousKey, sourceMap.get(key));
+                previousKey++;
+            }
+        }
+        return reorderedMap;
+    }
+
 
 
     private boolean isPointInsideView(int x, int y, View view){
@@ -410,26 +417,6 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
         }
         return previous;
     }
-    private int getPositionOfChild(int x, int y) {
-
-        View root = (View) getParent();
-        int[] viewCoords = new int[2];
-        root.getLocationOnScreen(viewCoords);
-        Log.w("position", String.format("x %03d      y %03d              ", x - viewCoords[0], y - viewCoords[1]));
-
-
-        int width = getChildWidth();
-        int height = getChildHeight();
-
-        int column = x / width;
-        int row = y / height;
-
-        return ((row * numOfColumn) + column);
-    }
-
-    private int getPositionOfChild(View child) {
-        return getPositionOfChild((int) child.getX(), (int) child.getY(), -1);
-    }
 
     private void setAnchor(int idx) {
         anchor.setVisibility(VISIBLE);
@@ -443,13 +430,6 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
 
         int paddingLeft = getPaddingLeft();
         int paddingTop = getPaddingTop();
-
-        //Rect rect = new Rect();
-        //getParent().getGlobalVisibleRect(rect);
-
-
-
-
 
         int childWidth = getChildWidth();
         int childHeight = getChildHeight();
