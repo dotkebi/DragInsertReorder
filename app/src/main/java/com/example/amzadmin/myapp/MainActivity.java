@@ -23,7 +23,7 @@ public class MainActivity extends Activity {
         BAdapter tAdapter = new BAdapter(this, arrayList);
 
         List<String> arrayList2 = new ArrayList<>();
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 13; i++) {
             arrayList2.add("bottom " + i);
         }
         BAdapter bAdapter = new BAdapter(this, arrayList2);

@@ -13,6 +13,8 @@
     tools:context=".MainActivity">
 
     <com.example.amzadmin.myapp.DragReOrderInsert
+        android:animateLayoutChanges="true"
+        android:background="@android:color/holo_blue_bright"
         android:layout_marginTop="300dp"
         app:numOfColumn="3"
         app:horizontalSpace="5dp"
