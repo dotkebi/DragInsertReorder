@@ -159,6 +159,7 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
                 for (int i = 0; i < size; i++) {
                     quantityOfTopChild = getNextChildFromAdapter(topAdapter, topViewMap, quantityOfTopChild, i);
                 }
+
             }
             if (bottomAdapter != null) {
                 int size = (bottomAdapter.getCount() > NUM_OF_BOTTOM) ? NUM_OF_BOTTOM : bottomAdapter.getCount();
@@ -310,7 +311,7 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
 
                     if (fromBottom && newPosition < NUM_OF_TOP) { // from bottom
                         View child;
-                        if (topViewMap.size() > NUM_OF_TOP) {
+                        if (topViewMap.size() >= NUM_OF_TOP) {
                             child = topViewMap.get(NUM_OF_TOP - 1);
                             removeView(child);
                             topViewMap.remove(NUM_OF_TOP - 1);
@@ -463,7 +464,6 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
         int childLeft = paddingLeft + (childWidth + verticalSpace) * column;
 
         child.layout(childLeft, childTop, childLeft + childWidth, childTop + childHeight);
-//        child.startAnimation(null);
     }
 
 
