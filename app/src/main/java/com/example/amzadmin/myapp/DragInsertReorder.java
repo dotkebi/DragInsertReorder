@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author dotkebi on 2015. 7. 9..
+ * @author dotkebi@gmail.com on 2015. 7. 9..
  */
 public class DragInsertReorder extends ViewGroup implements View.OnTouchListener {
     private static final int NUM_OF_ROWS = 5;
