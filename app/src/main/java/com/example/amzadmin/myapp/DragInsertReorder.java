@@ -20,10 +20,12 @@ import java.util.Map;
 /**
  * @author dotkebi on 2015. 7. 9..
  */
-public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener {
+public class DragInsertReorder extends ViewGroup implements View.OnTouchListener {
     private static final int NUM_OF_ROWS = 5;
     private static final int NUM_OF_TOP = 9;
     private static final int NUM_OF_BOTTOM = 6;
+
+    private OnPositionChanged onPositionChanged;
 
     private WindowManager windowManager;
     private WindowManager.LayoutParams stickyParams;
@@ -52,23 +54,23 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
     private Context context;
     private View convertView;
 
-    public DragReOrderInsert(Context context) {
+    public DragInsertReorder(Context context) {
         super(context);
     }
 
-    public DragReOrderInsert(Context context, AttributeSet attrs) {
+    public DragInsertReorder(Context context, AttributeSet attrs) {
         super(context, attrs);
         init(context, attrs);
     }
 
     private void init(Context context, AttributeSet attrs) {
         this.context = context;
-        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.DragReOrderInsert);
+        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.DragInsertReorder);
         if (a != null) {
-            layoutAnchor = a.getResourceId(R.styleable.DragReOrderInsert_layoutAnchor, layoutAnchor);
-            numOfColumn = a.getInt(R.styleable.DragReOrderInsert_numOfColumn, numOfColumn);
-            verticalSpace = a.getDimensionPixelOffset(R.styleable.DragReOrderInsert_verticalSpace, verticalSpace);
-            horizontalSpace = a.getDimensionPixelOffset(R.styleable.DragReOrderInsert_horizontalSpace, horizontalSpace);
+            layoutAnchor = a.getResourceId(R.styleable.DragInsertReorder_layoutAnchor, layoutAnchor);
+            numOfColumn = a.getInt(R.styleable.DragInsertReorder_numOfColumn, numOfColumn);
+            verticalSpace = a.getDimensionPixelOffset(R.styleable.DragInsertReorder_verticalSpace, verticalSpace);
+            horizontalSpace = a.getDimensionPixelOffset(R.styleable.DragInsertReorder_horizontalSpace, horizontalSpace);
         }
 
         if (numOfColumn <= 0) {
@@ -84,27 +86,31 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
 
     }
 
-    public DragReOrderInsert(Context context, AttributeSet attrs, int defStyleAttr) {
+    public DragInsertReorder(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init(context, attrs);
     }
 
-    public void setTopAdapter(Adapter adapter) {
+    public void setTopAdapter(DragInsertReorderBaseAdapter adapter) {
         this.topAdapter = adapter;
+        onPositionChanged = adapter;
         topViewMap.clear();
         quantityOfTopChild = 0;
     }
 
-    public void setBottomAdapter(Adapter adapter) {
+    public void setBottomAdapter(DragInsertReorderBaseAdapter adapter) {
         this.bottomAdapter = adapter;
         bottomViewMap.clear();
         quantityOfBottomChild = 0;
     }
 
+    public void setOnPositionChanged(OnPositionChanged onPositionChanged) {
+        this.onPositionChanged = onPositionChanged;
+    }
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-
         measureVertical(widthMeasureSpec, heightMeasureSpec);
     }
 
@@ -165,6 +171,7 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
                 int size = (bottomAdapter.getCount() > NUM_OF_BOTTOM) ? NUM_OF_BOTTOM : bottomAdapter.getCount();
                 for (int i = 0; i < size; i++) {
                     quantityOfBottomChild = getNextChildFromAdapter(bottomAdapter, bottomViewMap, quantityOfBottomChild, i);
+                    bottomViewMap.get(i).setVisibility(GONE);
                 }
             }
 
@@ -183,11 +190,12 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
                 sticky.setVisibility(GONE);
                 windowManager.addView(sticky, stickyParams);
 
-                DragReOrderInsert.LayoutParams param = new DragReOrderInsert.LayoutParams(getChildWidth(), getChildHeight());
+                DragInsertReorder.LayoutParams param = new DragInsertReorder.LayoutParams(getChildWidth(), getChildHeight());
                 anchor = View.inflate(context, layoutAnchor, null);
                 anchor.setVisibility(GONE);
                 addView(anchor, param);
             }
+            invalidate();
 
         }
 
@@ -198,8 +206,9 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
         int width = getChildWidth();
         int height = getChildHeight();
 
-        DragReOrderInsert.LayoutParams param = new DragReOrderInsert.LayoutParams(width, height);
+        DragInsertReorder.LayoutParams param = new DragInsertReorder.LayoutParams(width, height);
         View child = adapter.getView(position, convertView, this);
+        child.setTag(position);
         viewMap.put(idx, child);
         addView(viewMap.get(idx), param);
         return ++position;
@@ -212,8 +221,6 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
             View view = topViewMap.get(key);
             if (oldPosition == -1) {
                 view.setVisibility(VISIBLE);
-            } else {
-                continue;
             }
             setChildLayout(view, key);
         }
@@ -238,7 +245,7 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
 
     @Override
     public LayoutParams generateLayoutParams(AttributeSet attrs) {
-        return new DragReOrderInsert.LayoutParams(getContext(), attrs);
+        return new DragInsertReorder.LayoutParams(getContext(), attrs);
     }
 
     @Override
@@ -392,6 +399,7 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
 
         setChildLayout(viewMap.get(left), left);
         setChildLayout(viewMap.get(right), right);
+        onPositionChanged.onPositionChanged(left, right);
     }
 
     private Map<Integer, View> reordering(Map<Integer, View> sourceMap) {
@@ -491,8 +499,21 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
 
     public void toggleBottom(boolean flag) {
         for (int key : bottomViewMap.keySet()) {
-            bottomViewMap.get(key).setVisibility((flag) ? GONE : VISIBLE);
+            bottomViewMap.get(key).setVisibility((flag) ? VISIBLE : GONE);
         }
+        invalidate();
+    }
+
+    public interface OnPositionChanged {
+        void onPositionChanged(int oldPosition, int newPosition);
+    }
+
+    public interface OnObjectInserted {
+        void onObejctInserted(Object object);
+    }
+
+    public interface OnReordering {
+        void onReordering();
     }
 
 

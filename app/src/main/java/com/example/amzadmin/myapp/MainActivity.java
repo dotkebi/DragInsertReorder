@@ -7,29 +7,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends Activity {
-    private DragReOrderInsert dragReOrderInsert;
+    private DragInsertReorder dragInsertReorder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        dragReOrderInsert = (DragReOrderInsert) findViewById(R.id.drag);
+        dragInsertReorder = (DragInsertReorder) findViewById(R.id.drag);
 
         List<String> arrayList = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             arrayList.add("top " + i);
         }
-        BAdapter tAdapter = new BAdapter(this, arrayList);
+        DragInsertReorderBaseAdapter tAdapter = new DragInsertReorderBaseAdapter(this, arrayList);
 
         List<String> arrayList2 = new ArrayList<>();
         for (int i = 0; i < 13; i++) {
             arrayList2.add("bottom " + i);
         }
-        BAdapter bAdapter = new BAdapter(this, arrayList2);
+        DragInsertReorderBaseAdapter dragInsertReorderBaseAdapter = new DragInsertReorderBaseAdapter(this, arrayList2);
 
-        dragReOrderInsert.setTopAdapter(tAdapter);
-        dragReOrderInsert.setBottomAdapter(bAdapter);
+        dragInsertReorder.setTopAdapter(tAdapter);
+        dragInsertReorder.setBottomAdapter(dragInsertReorderBaseAdapter);
 
 
     }
@@ -37,7 +37,7 @@ public class MainActivity extends Activity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        dragReOrderInsert.finish();
+        dragInsertReorder.finish();
     }
 
 }

@@ -12,11 +12,11 @@ import java.util.List;
 /**
  * @author dotkebi on 2015. 7. 9..
  */
-public class BAdapter extends BaseAdapter {
+public class DragInsertReorderBaseAdapter extends BaseAdapter implements DragInsertReorder.OnPositionChanged, DragInsertReorder.OnObjectInserted, DragInsertReorder.OnReordering {
     private Context context;
     private List<String> arrayList;
 
-    public BAdapter(Context context, List<String> arrayList) {
+    public DragInsertReorderBaseAdapter(Context context, List<String> arrayList) {
         this.context = context;
         this.arrayList = arrayList;
     }
@@ -59,5 +59,20 @@ public class BAdapter extends BaseAdapter {
         });*/
 
         return convertView;
+    }
+
+    @Override
+    public void onPositionChanged(int oldPosition, int newPosition) {
+
+    }
+
+    @Override
+    public void onObejctInserted(Object object) {
+
+    }
+
+    @Override
+    public void onReordering() {
+
     }
 }
