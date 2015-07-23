@@ -16,6 +16,7 @@
         android:animateLayoutChanges="true"
         android:background="@android:color/holo_blue_bright"
         android:layout_marginTop="300dp"
+        app:layoutAnchor="@layout/position"
         app:numOfColumn="3"
         app:horizontalSpace="5dp"
         app:verticalSpace="5dp"

@@ -41,6 +41,7 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
     private int quantityOfTopChild;
     private int quantityOfBottomChild;
 
+    private int layoutAnchor;
     private int numOfColumn;
     private int verticalSpace;
     private int horizontalSpace;
@@ -64,6 +65,7 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
         this.context = context;
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.DragReOrderInsert);
         if (a != null) {
+            layoutAnchor = a.getResourceId(R.styleable.DragReOrderInsert_layoutAnchor, layoutAnchor);
             numOfColumn = a.getInt(R.styleable.DragReOrderInsert_numOfColumn, numOfColumn);
             verticalSpace = a.getDimensionPixelOffset(R.styleable.DragReOrderInsert_verticalSpace, verticalSpace);
             horizontalSpace = a.getDimensionPixelOffset(R.styleable.DragReOrderInsert_horizontalSpace, horizontalSpace);
@@ -181,7 +183,7 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
                 windowManager.addView(sticky, stickyParams);
 
                 DragReOrderInsert.LayoutParams param = new DragReOrderInsert.LayoutParams(getChildWidth(), getChildHeight());
-                anchor = View.inflate(context, R.layout.position, null);
+                anchor = View.inflate(context, layoutAnchor, null);
                 anchor.setVisibility(GONE);
                 addView(anchor, param);
             }
@@ -307,7 +309,10 @@ public class DragReOrderInsert extends ViewGroup implements View.OnTouchListener
 
 
                     if (fromBottom && newPosition < NUM_OF_TOP) { // from bottom
+                        View child;
                         if (topViewMap.size() > NUM_OF_TOP) {
+                            child = topViewMap.get(NUM_OF_TOP - 1);
+                            removeView(child);
                             topViewMap.remove(NUM_OF_TOP - 1);
                         }
                         bottomViewMap.remove(bottomPosition);

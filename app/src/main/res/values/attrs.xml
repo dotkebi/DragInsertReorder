@@ -1,6 +1,7 @@
 <resources>
 
     <declare-styleable name="DragReOrderInsert">
+        <attr name="layoutAnchor" format="reference"/>
         <attr name="numOfColumn" format="integer"/>
         <attr name="verticalSpace" format="dimension"/>
         <attr name="horizontalSpace" format="dimension"/>
