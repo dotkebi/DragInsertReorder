@@ -30,8 +30,6 @@ public class MainActivity extends Activity {
 
         dragInsertReorder.setTopAdapter(tAdapter);
         dragInsertReorder.setBottomAdapter(dragInsertReorderBaseAdapter);
-
-
     }
 
     @Override

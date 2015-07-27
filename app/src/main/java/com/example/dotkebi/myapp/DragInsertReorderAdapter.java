@@ -41,9 +41,4 @@ public class DragInsertReorderAdapter extends DragInsertReorderBaseAdapter {
         return convertView;
     }
 
-    @Override
-    public void setItem(int position, Object object) {
-        arrayList.set(position, object);
-    }
-
 }

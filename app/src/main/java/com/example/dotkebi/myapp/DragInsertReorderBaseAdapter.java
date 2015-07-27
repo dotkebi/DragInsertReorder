@@ -39,6 +39,10 @@ public abstract class DragInsertReorderBaseAdapter extends BaseAdapter implement
         setItem(newPosition, oldO);
     }
 
+    private void setItem(int position, Object object) {
+        arrayList.set(position, object);
+    }
+
     @Override
     public void onObejctInserted(int position, Object object) {
         List<Object> list = new ArrayList<>();
@@ -50,8 +54,5 @@ public abstract class DragInsertReorderBaseAdapter extends BaseAdapter implement
         }
         arrayList = list;
     }
-
-    abstract void setItem(int position, Object object);
-
 
 }
