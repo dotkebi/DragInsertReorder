@@ -484,9 +484,6 @@ public class DragInsertReorder extends ViewGroup implements View.OnTouchListener
     }
 
     public void toggleBottom(boolean flag) {
-        /*for (int key : bottomView.keySet()) {
-            bottomView.get(key).setVisibility((flag) ? VISIBLE : GONE);
-        }*/
         for (View view : bottomView) {
             view.setVisibility((flag) ? VISIBLE : GONE);
         }
