@@ -1,4 +1,4 @@
-package com.example.amzadmin.myapp;
+package com.example.dotkebi.myapp;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -16,13 +16,13 @@ public class MainActivity extends Activity {
 
         dragInsertReorder = (DragInsertReorder) findViewById(R.id.drag);
 
-        List<String> arrayList = new ArrayList<>();
+        List<Object> arrayList = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             arrayList.add("top " + i);
         }
         DragInsertReorderBaseAdapter tAdapter = new DragInsertReorderBaseAdapter(this, arrayList);
 
-        List<String> arrayList2 = new ArrayList<>();
+        List<Object> arrayList2 = new ArrayList<>();
         for (int i = 0; i < 13; i++) {
             arrayList2.add("bottom " + i);
         }

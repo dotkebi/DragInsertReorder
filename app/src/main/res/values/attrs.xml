@@ -2,7 +2,10 @@
 
     <declare-styleable name="DragInsertReorder">
         <attr name="layoutAnchor" format="reference"/>
+        <attr name="numOfRow" format="integer"/>
         <attr name="numOfColumn" format="integer"/>
+        <attr name="numOfTop" format="integer"/>
+        <attr name="numOfBottom" format="integer"/>
         <attr name="verticalSpace" format="dimension"/>
         <attr name="horizontalSpace" format="dimension"/>
     </declare-styleable>

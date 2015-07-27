@@ -13,12 +13,15 @@
     tools:context=".MainActivity">
 
 
-    <com.example.amzadmin.myapp.DragInsertReorder
-        android:animateLayoutChanges="true"
+    <!--android:animateLayoutChanges="true"-->
+    <com.example.dotkebi.myapp.DragInsertReorder
+
         android:background="@android:color/holo_blue_bright"
         android:layout_marginTop="300dp"
         app:layoutAnchor="@layout/position"
         app:numOfColumn="3"
+        app:numOfTop="9"
+        app:numOfBottom="6"
         app:horizontalSpace="5dp"
         app:verticalSpace="5dp"
         android:id="@+id/drag"
