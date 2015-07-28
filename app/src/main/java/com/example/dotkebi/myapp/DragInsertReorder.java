@@ -133,11 +133,7 @@ public class DragInsertReorder extends ViewGroup implements View.OnTouchListener
         for (int i = 0; i < count; ++i) {
             final View child = getChildAt(i);
 
-            if (child == null) {
-                continue;
-            }
-
-            if (child.getVisibility() == View.GONE) {
+            if (child == null || child.getVisibility() == View.GONE) {
                 continue;
             }
 
@@ -170,21 +166,17 @@ public class DragInsertReorder extends ViewGroup implements View.OnTouchListener
 
         if (getChildCount() == 0 && topView.size() == 0 && bottomView.size() == 0) {
 
-            if (topAdapter != null) {
-                int size = (topAdapter.getCount() > NUM_OF_TOP) ? NUM_OF_TOP : topAdapter.getCount();
-                for (int i = 0; i < size; i++) {
-                    topChildPositionFromAdapter.add(i);
-                    quantityOfTopChild = getChildFromAdapter(topAdapter, topView, quantityOfTopChild, i);
-                    addView(topView.get(i), childParams);
-                }
-
+            int size = (topAdapter.getCount() > NUM_OF_TOP) ? NUM_OF_TOP : topAdapter.getCount();
+            for (int i = 0; i < size; i++) {
+                topChildPositionFromAdapter.add(i);
+                quantityOfTopChild = getChildFromAdapter(topAdapter, topView, quantityOfTopChild, i);
+                addView(topView.get(i), childParams);
             }
-            if (bottomAdapter != null) {
-                int size = (bottomAdapter.getCount() > NUM_OF_BOTTOM) ? NUM_OF_BOTTOM : bottomAdapter.getCount();
-                for (int i = 0; i < size; i++) {
-                    quantityOfBottomChild = getChildFromAdapter(bottomAdapter, bottomView, quantityOfBottomChild, i);
-                    addView(bottomView.get(i), childParams);
-                }
+
+            size = (bottomAdapter.getCount() > NUM_OF_BOTTOM) ? NUM_OF_BOTTOM : bottomAdapter.getCount();
+            for (int i = 0; i < size; i++) {
+                quantityOfBottomChild = getChildFromAdapter(bottomAdapter, bottomView, quantityOfBottomChild, i);
+                addView(bottomView.get(i), childParams);
             }
 
             if (windowManager == null) {
@@ -209,12 +201,10 @@ public class DragInsertReorder extends ViewGroup implements View.OnTouchListener
             invalidate();
 
         }
-
         layoutVertical(left, top, right, bottom);
     }
 
     private int getChildFromAdapter(Adapter adapter, List<View> viewHolder, int position, int idx) {
-        //View child = (viewHolder.get(idx) == null) ? adapter.getView(position, null, this) : adapter.getView(position, viewHolder.get(idx), this);
         View child;
         if (viewHolder.size() <= idx) {
             child = adapter.getView(position, null, this);
