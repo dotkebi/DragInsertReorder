@@ -185,7 +185,7 @@ public class DragInsertReorder extends ViewGroup implements View.OnTouchListener
                 stickyParams = new WindowManager.LayoutParams(
                         WindowManager.LayoutParams.WRAP_CONTENT,
                         WindowManager.LayoutParams.WRAP_CONTENT,
-                        WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
+                        WindowManager.LayoutParams.TYPE_APPLICATION,
                         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                         PixelFormat.TRANSLUCENT);
                 stickyParams.gravity = Gravity.LEFT | Gravity.TOP;
