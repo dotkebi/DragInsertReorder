@@ -87,8 +87,8 @@ public class DragInsertReorder extends ViewGroup implements View.OnTouchListener
             NUM_OF_ROWS = a.getInt(R.styleable.DragInsertReorder_numOfRow, NUM_OF_ROWS);
             verticalSpace = a.getDimensionPixelOffset(R.styleable.DragInsertReorder_verticalSpace, verticalSpace);
             horizontalSpace = a.getDimensionPixelOffset(R.styleable.DragInsertReorder_horizontalSpace, horizontalSpace);
+            a.recycle();
         }
-        a.recycle();
 
     }
 
@@ -113,8 +113,8 @@ public class DragInsertReorder extends ViewGroup implements View.OnTouchListener
         void onPositionChanged(int oldPosition, int newPosition);
     }
 
-    public interface OnObjectInserted {
-        void onObejctInserted(int position, Object object);
+    public interface OnObjectInserted<T> {
+        void onObejctInserted(int position, T object);
     }
 
     @Override

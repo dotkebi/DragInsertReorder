@@ -8,10 +8,10 @@ import java.util.List;
 /**
  * @author dotkebi on 2015. 7. 9..
  */
-public abstract class DragInsertReorderBaseAdapter extends BaseAdapter implements DragInsertReorder.OnPositionChanged, DragInsertReorder.OnObjectInserted {
-    protected List<Object> arrayList = new ArrayList<>();
+public abstract class DragInsertReorderBaseAdapter<T> extends BaseAdapter implements DragInsertReorder.OnPositionChanged, DragInsertReorder.OnObjectInserted<T> {
+    protected List<T> arrayList = new ArrayList<>();
 
-    public DragInsertReorderBaseAdapter(List<Object> arrayList) {
+    public DragInsertReorderBaseAdapter(List<T> arrayList) {
         this.arrayList = arrayList;
     }
 
@@ -21,7 +21,7 @@ public abstract class DragInsertReorderBaseAdapter extends BaseAdapter implement
     }
 
     @Override
-    public Object getItem(int position) {
+    public T getItem(int position) {
         return arrayList.get(position);
     }
 
@@ -32,20 +32,20 @@ public abstract class DragInsertReorderBaseAdapter extends BaseAdapter implement
 
     @Override
     public void onPositionChanged(int oldPosition, int newPosition) {
-        Object oldO = getItem(oldPosition);
-        Object newO = getItem(newPosition);
+        T oldO = getItem(oldPosition);
+        T newO = getItem(newPosition);
 
         setItem(oldPosition, newO);
         setItem(newPosition, oldO);
     }
 
-    private void setItem(int position, Object object) {
+    private void setItem(int position, T object) {
         arrayList.set(position, object);
     }
 
     @Override
-    public void onObejctInserted(int position, Object object) {
-        List<Object> list = new ArrayList<>();
+    public void onObejctInserted(int position, T object) {
+        List<T> list = new ArrayList<>();
         for (int i = 0; i < arrayList.size(); i++) {
             if (i == position) {
                 list.add(object);

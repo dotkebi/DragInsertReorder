@@ -10,10 +10,10 @@ import java.util.List;
 /**
  * @author dotkebi on 2015. 7. 9..
  */
-public class DragInsertReorderAdapter extends DragInsertReorderBaseAdapter {
+public class DragInsertReorderAdapter<T> extends DragInsertReorderBaseAdapter {
     private Context context;
 
-    public DragInsertReorderAdapter(Context context, List<Object> arrayList) {
+    public DragInsertReorderAdapter(Context context, List<T> arrayList) {
         super(arrayList);
         this.context = context;
     }
